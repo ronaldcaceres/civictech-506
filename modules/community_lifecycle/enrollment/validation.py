@@ -26,7 +26,7 @@ class ValidationResult:
 
 def validate_full_name(name: str | None, errors: list[str])-> None:
     if not name or not name.strip():
-        errors.append("full name is required")
+        errors.append("full_name is required")
         return
     name = name.strip()
     if len(name) < 3:
