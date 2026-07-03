@@ -194,6 +194,7 @@ specs (future).
 - API endpoints
 - Admin authentication/authorization
 - User account creation mechanics (belongs to Onboarding)
+
 ---
 
 ## 7. Derived implementation
