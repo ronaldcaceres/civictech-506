@@ -1,28 +1,24 @@
 """
 Enrollment Validation Tests
-Spec: specs/enrollment/01_validation_rules.md
+Spec: specs/enrollment/01_validation_rules.md (v2.0)
 """
 
 from modules.community_lifecycle.enrollment.validation import (
     validate_registration_form,
-    ValidationResult,
 )
 
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
 def valid_form() -> dict:
-    """Returns a complete, valid registration form.
+    """Returns a complete, valid registration form (spec v2.0).
     Use this as a base and override specific fields in each test."""
     return {
-        "full_name": "Ronald Caceres",
+        "first_name": "Ronald",
+        "last_name": "Caceres",
         "email": "ronald.caceres@gmail.com",
         "phone": "5065551234",
-        "skills": ["Python", "Backend"],
-        "availability_hours_per_week": 10,
-        "experience_level": "Intermediate",
-        "motivation": "I want to contribute to my community through technology.",
-        "linkedin_or_github": "https://github.com/ronaldcaceres",
+        "address": "123 Main Street, Moncton, NB",
     }
 
 
@@ -33,54 +29,94 @@ def test_valid_form_passes():
     assert result.validation_passed is True
     assert result.errors == []
 
-# ── full_name ──────────────────────────────────────────────────────────────────
 
-def test_full_name_required():
+# ── first_name ─────────────────────────────────────────────────────────────────
+
+def test_first_name_required():
     form = valid_form()
-    form["full_name"] = ""
+    form["first_name"] = ""
     result = validate_registration_form(form)
     assert result.validation_passed is False
-    assert "full_name is required" in result.errors
+    assert "first_name is required" in result.errors
 
 
-def test_full_name_none():
+def test_first_name_none():
     form = valid_form()
-    form["full_name"] = None
+    form["first_name"] = None
     result = validate_registration_form(form)
     assert result.validation_passed is False
-    assert "full_name is required" in result.errors
+    assert "first_name is required" in result.errors
 
 
-def test_full_name_too_short():
+def test_first_name_too_short():
     form = valid_form()
-    form["full_name"] = "RR"
+    form["first_name"] = "R"
     result = validate_registration_form(form)
     assert result.validation_passed is False
-    assert "full_name must be at least 3 characters" in result.errors
+    assert "first_name must be at least 2 characters" in result.errors
 
 
-def test_full_name_with_numbers():
+def test_first_name_two_chars_valid():
     form = valid_form()
-    form["full_name"] = "Ronald2"
-    result = validate_registration_form(form)
-    assert result.validation_passed is False
-    assert "full_name must contain only letters and spaces" in result.errors
-
-
-def test_full_name_with_french_accents():
-    form = valid_form()
-    form["full_name"] = "René Tremblay"
+    form["first_name"] = "Li"
     result = validate_registration_form(form)
     assert result.validation_passed is True
-    assert result.errors == []
 
 
-def test_full_name_with_leading_spaces():
+def test_first_name_with_numbers():
     form = valid_form()
-    form["full_name"] = "  Ronald Caceres  "
+    form["first_name"] = "Ronald2"
+    result = validate_registration_form(form)
+    assert result.validation_passed is False
+    assert "first_name must contain only letters and spaces" in result.errors
+
+
+def test_first_name_with_french_accents():
+    form = valid_form()
+    form["first_name"] = "René"
     result = validate_registration_form(form)
     assert result.validation_passed is True
-    assert result.errors == []
+
+
+# ── last_name ──────────────────────────────────────────────────────────────────
+
+def test_last_name_required():
+    form = valid_form()
+    form["last_name"] = ""
+    result = validate_registration_form(form)
+    assert result.validation_passed is False
+    assert "last_name is required" in result.errors
+
+
+def test_last_name_too_short():
+    form = valid_form()
+    form["last_name"] = "N"
+    result = validate_registration_form(form)
+    assert result.validation_passed is False
+    assert "last_name must be at least 2 characters" in result.errors
+
+
+def test_last_name_two_chars_valid():
+    form = valid_form()
+    form["last_name"] = "Ng"
+    result = validate_registration_form(form)
+    assert result.validation_passed is True
+
+
+def test_last_name_with_special_characters():
+    form = valid_form()
+    form["last_name"] = "Caceres!"
+    result = validate_registration_form(form)
+    assert result.validation_passed is False
+    assert "last_name must contain only letters and spaces" in result.errors
+
+
+def test_last_name_with_french_accents():
+    form = valid_form()
+    form["last_name"] = "Tremblay-Côté".replace("-", " ")  # spaces allowed, hyphens not (v2.0)
+    result = validate_registration_form(form)
+    assert result.validation_passed is True
+
 
 # ── email ──────────────────────────────────────────────────────────────────────
 
@@ -116,14 +152,22 @@ def test_email_missing_local_part():
     assert "email format is invalid" in result.errors
 
 
-# ── phone ──────────────────────────────────────────────────────────────────────
+# ── phone (REQUIRED in v2.0) ───────────────────────────────────────────────────
 
-def test_phone_optional_when_absent():
+def test_phone_required():
+    form = valid_form()
+    form["phone"] = ""
+    result = validate_registration_form(form)
+    assert result.validation_passed is False
+    assert "phone is required" in result.errors
+
+
+def test_phone_absent_key():
     form = valid_form()
     del form["phone"]
     result = validate_registration_form(form)
-    assert result.validation_passed is True
-    assert result.errors == []
+    assert result.validation_passed is False
+    assert "phone is required" in result.errors
 
 
 def test_phone_valid_with_country_code():
@@ -131,7 +175,13 @@ def test_phone_valid_with_country_code():
     form["phone"] = "+15065551234"
     result = validate_registration_form(form)
     assert result.validation_passed is True
-    assert result.errors == []
+
+
+def test_phone_valid_with_spaces_and_dashes():
+    form = valid_form()
+    form["phone"] = "506-555-1234"
+    result = validate_registration_form(form)
+    assert result.validation_passed is True
 
 
 def test_phone_invalid_format():
@@ -142,148 +192,60 @@ def test_phone_invalid_format():
     assert "phone format is invalid" in result.errors
 
 
-# ── skills ─────────────────────────────────────────────────────────────────────
+# ── address (NEW in v2.0) ──────────────────────────────────────────────────────
 
-def test_skills_required():
+def test_address_required():
     form = valid_form()
-    form["skills"] = []
+    form["address"] = ""
     result = validate_registration_form(form)
     assert result.validation_passed is False
-    assert "at least one skill is required" in result.errors
+    assert "address is required" in result.errors
 
 
-def test_skills_invalid_value():
+def test_address_absent_key():
     form = valid_form()
-    form["skills"] = ["Python", "Cooking"]
+    del form["address"]
     result = validate_registration_form(form)
     assert result.validation_passed is False
-    assert "skills contains invalid values: Cooking" in result.errors
+    assert "address is required" in result.errors
 
 
-def test_skills_all_valid():
+def test_address_too_short():
     form = valid_form()
-    form["skills"] = ["Python", "DevOps", "Design"]
+    form["address"] = "abc"
+    result = validate_registration_form(form)
+    assert result.validation_passed is False
+    assert "address must be at least 5 characters" in result.errors
+
+
+def test_address_free_text_valid():
+    form = valid_form()
+    form["address"] = "45 Botsford St, Apt 2B, Moncton NB E1C 4X1"
     result = validate_registration_form(form)
     assert result.validation_passed is True
-    assert result.errors == []
-
-
-# ── availability_hours_per_week ────────────────────────────────────────────────
-
-def test_availability_required():
-    form = valid_form()
-    del form["availability_hours_per_week"]
-    result = validate_registration_form(form)
-    assert result.validation_passed is False
-    assert "availability_hours_per_week is required" in result.errors
-
-
-def test_availability_below_minimum():
-    form = valid_form()
-    form["availability_hours_per_week"] = 0
-    result = validate_registration_form(form)
-    assert result.validation_passed is False
-    assert "availability_hours_per_week must be between 1 and 40" in result.errors
-
-
-def test_availability_above_maximum():
-    form = valid_form()
-    form["availability_hours_per_week"] = 41
-    result = validate_registration_form(form)
-    assert result.validation_passed is False
-    assert "availability_hours_per_week must be between 1 and 40" in result.errors
-
-
-def test_availability_bool_rejected():
-    form = valid_form()
-    form["availability_hours_per_week"] = True
-    result = validate_registration_form(form)
-    assert result.validation_passed is False
-    assert "availability_hours_per_week must be a number" in result.errors
-
-
-# ── experience_level ───────────────────────────────────────────────────────────
-
-def test_experience_level_required():
-    form = valid_form()
-    form["experience_level"] = ""
-    result = validate_registration_form(form)
-    assert result.validation_passed is False
-    assert "experience_level is required" in result.errors
-
-
-def test_experience_level_invalid():
-    form = valid_form()
-    form["experience_level"] = "Expert"
-    result = validate_registration_form(form)
-    assert result.validation_passed is False
-    assert "experience_level must be Beginner, Intermediate or Advanced" in result.errors
-
-
-def test_experience_level_valid_values():
-    for level in ["Beginner", "Intermediate", "Advanced"]:
-        form = valid_form()
-        form["experience_level"] = level
-        result = validate_registration_form(form)
-        assert result.validation_passed is True, f"Expected {level} to be valid"
-
-
-# ── motivation ─────────────────────────────────────────────────────────────────
-
-def test_motivation_required():
-    form = valid_form()
-    form["motivation"] = ""
-    result = validate_registration_form(form)
-    assert result.validation_passed is False
-    assert "motivation is required" in result.errors
-
-
-def test_motivation_too_short():
-    form = valid_form()
-    form["motivation"] = "Too short"
-    result = validate_registration_form(form)
-    assert result.validation_passed is False
-    assert "motivation must be at least 20 characters" in result.errors
-
-
-# ── linkedin_or_github ─────────────────────────────────────────────────────────
-
-def test_linkedin_optional_when_absent():
-    form = valid_form()
-    del form["linkedin_or_github"]
-    result = validate_registration_form(form)
-    assert result.validation_passed is True
-    assert result.errors == []
-
-
-def test_linkedin_invalid_url():
-    form = valid_form()
-    form["linkedin_or_github"] = "github.com/ronald"
-    result = validate_registration_form(form)
-    assert result.validation_passed is False
-    assert "linkedin_or_github must be a valid URL (https://)" in result.errors
-
-
-def test_linkedin_valid_url():
-    form = valid_form()
-    form["linkedin_or_github"] = "https://linkedin.com/in/ronaldcaceres"
-    result = validate_registration_form(form)
-    assert result.validation_passed is True
-    assert result.errors == []
 
 
 # ── aggregate behavior ─────────────────────────────────────────────────────────
 
 def test_all_rules_run_no_fail_fast():
-    """Verifies that ALL validation rules run even when multiple fields fail."""
+    """Verifies that ALL validation rules run even when every field fails."""
     form = {
-        "full_name": "",
+        "first_name": "",
+        "last_name": "",
         "email": "",
-        "skills": [],
-        "availability_hours_per_week": None,
-        "experience_level": "",
-        "motivation": "",
+        "phone": "",
+        "address": "",
     }
     result = validate_registration_form(form)
     assert result.validation_passed is False
-    assert len(result.errors) >= 6
+    assert len(result.errors) == 5  # exactly one "required" error per field
+
+
+def test_empty_form_all_required_errors():
+    result = validate_registration_form({})
+    assert result.validation_passed is False
+    assert "first_name is required" in result.errors
+    assert "last_name is required" in result.errors
+    assert "email is required" in result.errors
+    assert "phone is required" in result.errors
+    assert "address is required" in result.errors
