@@ -51,6 +51,28 @@ requirement to justify it.
 - WHEN an Application is in `SUBMITTED` AND validation runs AND validation passes,
   THEN the system SHALL transition the Application to `STORED`.
 
+**Duplicate prevention (by email):**
+
+Emails are compared case-insensitively and trimmed.
+
+- WHEN a member submits a NEW Registration Form,
+  IF an Application with the same email exists in state `SUBMITTED`,
+  `VALIDATION_FAILED`, or `STORED`,
+  THEN the system SHALL NOT create a new Application
+  AND SHALL return error `"an active application already exists for this email"`.
+
+- WHEN a member submits a NEW Registration Form,
+  IF an Application with the same email exists in state `APPROVED`,
+  THEN the system SHALL NOT create a new Application
+  AND SHALL return error `"this email is already enrolled as a member"`.
+
+- WHEN a member submits a NEW Registration Form,
+  IF the only existing Applications with that email are in state `REJECTED`,
+  THEN the system SHALL allow the new Application (consistent with rule 3.4).
+
+**Known limitation:** if the member mistypes their EMAIL, this check cannot
+detect the duplicate. Accepted risk for v1.
+
 ### 3.2 Correction loop
 
 - WHEN an Application is in `VALIDATION_FAILED` AND the member resubmits corrected data,
@@ -88,9 +110,11 @@ verification facts.
   THEN the system SHALL transition the Application to `APPROVED`.
 
 - WHEN an Application is in `STORED` AND an admin rejects it,
-  THEN the system SHALL transition the Application to `REJECTED`.
-  (Rejection does NOT require the checklist to be complete — an admin can
-  reject at any point during review.)
+  THEN the system SHALL transition the Application to `REJECTED`
+  AND SHALL record a rejection reason:
+  IF any checklist items are unverified, the system SHALL auto-generate the
+  reason listing them (e.g., "unverified: photograph, home_address");
+  the admin MAY add optional notes.
 
 ### 3.4 Terminal states
 
