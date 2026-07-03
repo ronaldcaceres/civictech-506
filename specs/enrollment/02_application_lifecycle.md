@@ -90,6 +90,9 @@ system; the member presents them physically). The system only records the
 verification facts.
 
 **Checklist items:** `volunteer_id`, `photograph`, `home_address`
+Each item verifies physical documents against the data the member entered
+in the Registration Form: `volunteer_id` verifies first/last name,
+`photograph` verifies identity, `home_address` verifies the address field.
 
 - WHEN an Application is in `STORED` AND an admin marks a checklist item as verified,
   THEN the system SHALL record the item, the admin identity, and the timestamp.
@@ -156,7 +159,7 @@ specs (future).
 
 ### 3.6 Invalid transitions (catch-all)
 
-- WHEN any transition not explicitly allowed in sections 3.1–3.3 is attempted,
+- WHEN any transition not explicitly allowed in sections 3.1–3.4 is attempted,
   THEN the system SHALL reject it with error
   `"invalid transition from {current_state} to {target_state}"`
   AND the Application state SHALL remain unchanged.
@@ -187,10 +190,10 @@ specs (future).
 ## 6. Out of scope for this spec
 
 - Database persistence (repository layer)
-- Email notifications
+- Email notification implementation details (CakeMail integration, templates)
 - API endpoints
 - Admin authentication/authorization
-
+- User account creation mechanics (belongs to Onboarding)
 ---
 
 ## 7. Derived implementation
