@@ -61,13 +61,36 @@ requirement to justify it.
   THEN the system SHALL reject the modification with error
   `"application is under review and cannot be modified"`.
 
-### 3.3 Admin review
+### 3.3 Admin review and verification checklist
 
-- WHEN an Application is in `STORED` AND an admin approves it,
+The admin verifies three items in person (documents are NOT uploaded to the
+system; the member presents them physically). The system only records the
+verification facts.
+
+**Checklist items:** `volunteer_id`, `photograph`, `home_address`
+
+- WHEN an Application is in `STORED` AND an admin marks a checklist item as verified,
+  THEN the system SHALL record the item, the admin identity, and the timestamp.
+
+- WHEN an Application is NOT in `STORED`,
+  IF an admin attempts to mark a checklist item,
+  THEN the system SHALL reject it with error
+  `"checklist can only be updated while application is under review"`.
+
+- WHEN an Application is in `STORED` AND an admin attempts to approve it,
+  IF any checklist item is not verified,
+  THEN the system SHALL reject the approval with error
+  `"all verification checks must be completed before approval"`
+  AND the Application SHALL remain in `STORED`.
+
+- WHEN an Application is in `STORED` AND ALL checklist items are verified
+  AND an admin approves it,
   THEN the system SHALL transition the Application to `APPROVED`.
 
 - WHEN an Application is in `STORED` AND an admin rejects it,
   THEN the system SHALL transition the Application to `REJECTED`.
+  (Rejection does NOT require the checklist to be complete — an admin can
+  reject at any point during review.)
 
 ### 3.4 Terminal states
 
@@ -104,7 +127,7 @@ requirement to justify it.
 |---|---|---|---|---|---|
 | SUBMITTED | — | ✅ system | ✅ system | ❌ | ❌ |
 | VALIDATION_FAILED | ✅ member | — | ❌ | ❌ | ❌ |
-| STORED | ❌ | ❌ | — | ✅ admin | ✅ admin |
+| STORED | ❌ | ❌ | — | ✅ admin (requires full checklist) | ✅ admin |
 | APPROVED | ❌ | ❌ | ❌ | — | ❌ |
 | REJECTED | ❌ | ❌ | ❌ | ❌ | — |
 
@@ -125,3 +148,4 @@ This spec derives directly into:
 - `modules/community_lifecycle/enrollment/enums.py` (ApplicationStatus)
 - `modules/community_lifecycle/enrollment/models.py` (Application + transition logic)
 - `tests/enrollment/test_application_lifecycle.py`
+- Verification checklist model (part of models.py or its own module)
