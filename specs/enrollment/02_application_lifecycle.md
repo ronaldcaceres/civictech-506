@@ -127,7 +127,34 @@ verification facts.
   THEN the system SHALL require a NEW Application (the rejected one remains
   closed and immutable for audit purposes).
 
-### 3.5 Invalid transitions (catch-all)
+### 3.5 Post-decision effects
+
+**Approval effects (handoff to Onboarding):**
+
+- WHEN an Application transitions to `APPROVED`,
+  THEN the system SHALL:
+  1. Send an approval notification email to the member's email address.
+  2. Automatically create a user account for the member.
+  3. Enable basic access for the new account.
+  4. Send an initial welcome email inviting the member to the onboarding portal.
+
+- WHEN account creation fails after approval,
+  THEN the Application SHALL remain `APPROVED`
+  AND the system SHALL log the failure for manual resolution
+  (the approval decision is not reversed by technical failures).
+
+**Note:** these effects are the formal handoff point between the Enrollment
+process and the Onboarding process, both within the Community & Volunteer
+Lifecycle bounded context. Account creation details belong to Onboarding
+specs (future).
+
+**Rejection effects:**
+
+- WHEN an Application transitions to `REJECTED`,
+  THEN the system SHALL send a rejection notification email to the member's
+  email address, including the rejection reason (see 3.3).
+
+### 3.6 Invalid transitions (catch-all)
 
 - WHEN any transition not explicitly allowed in sections 3.1–3.3 is attempted,
   THEN the system SHALL reject it with error
@@ -173,3 +200,5 @@ This spec derives directly into:
 - `modules/community_lifecycle/enrollment/models.py` (Application + transition logic)
 - `tests/enrollment/test_application_lifecycle.py`
 - Verification checklist model (part of models.py or its own module)
+- Post-approval effects orchestration (service.py, future)
+- Email notifications via CakeMail (shared/email_service.py, future)
